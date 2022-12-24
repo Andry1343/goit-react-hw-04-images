@@ -1,87 +1,76 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
+
 import { Searchbar } from './searchbar/Searchbar';
 import { getCards } from '../fetchFoto';
 import { ImageGallery } from './imageGallery/ImageGallery';
 import { Loader } from './loader/Loader';
+/* import { Modal } from './modal/Modal'; */
 import { Modal } from './modal/Modal';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.min.css';
 import { Button } from './button/Button';
 
-export class App extends Component {
-  state = {
-    query: '',
-    images: [],
-    showButton: false,
-    page: 1,
-    isLoading: false,
-    selectedImg: null,
-    error: null,
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [showButton, setShowButton] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImg, setSelectedImg] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleFormSubmit = query => {
+    setQuery(query);
+    setPage(1);
+    setImages([]);
   };
 
-  handleFormSubmit = query => {
-    this.setState({ query });
-  };
-
-  componentDidUpdate = (_, prevState) => {
-    const { query, page } = this.state;
-
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoading: true });
-
-      getCards(query, page)
-        .then(images => {
-          images.data.hits.length === 0 && toast.info('Nothing found');
-
-          if (images.data.hits.length >= 12) {
-            this.setState({ showButton: true });
-          } else this.setState({ showButton: false });
-
-          if (prevState.query !== query) {
-            this.setState({ images: [...images.data.hits], isLoading: false });
-          } else
-            this.setState({
-              images: [...prevState.images, ...images.data.hits],
-              isLoading: false,
-            });
-        })
-        .catch(error => {
-          this.setState({
-            error: toast.error('Something wrong, reload the page'),
-          });
-        });
+  useEffect(() => {
+    if (query === '') {
+      setShowButton(false); //потестить это нужно?
+      return;
     }
+
+    getCards(query, page)
+      .then(images => {
+        images.data.hits.length === 0 && toast.info('Nothing found');
+
+        if (images.data.hits.length >= 12) {
+          setShowButton(true);
+        } else setShowButton(false);
+        setImages(prevImages => [...prevImages, ...images.data.hits]);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        setError(toast.error('Something wrong, reload the page'));
+      });
+
     <ToastContainer />;
+  }, [query, page]);
+
+  const closeModal = () => {
+    setSelectedImg(null);
   };
 
-  closeModal = () => {
-    this.setState({ selectedImg: null });
+  const selectImg = imageUrl => {
+    setSelectedImg(imageUrl);
   };
 
-  selectImg = imageUrl => {
-    this.setState({ selectedImg: imageUrl });
+  const loadMoreBtn = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  loadMoreBtn = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-
-  render() {
-    const { error, isLoading, selectedImg, showButton } = this.state;
-    return (
-      <>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {error && <p>{error}</p>}
-        <ImageGallery images={this.state.images} onSelect={this.selectImg} />
-        {isLoading && <Loader />}
-        {showButton && <Button onClick={this.loadMoreBtn}></Button>}
-        {selectedImg !== null && (
-          <Modal url={selectedImg} closeModal={this.closeModal}>
-            <img src={selectedImg} alt={selectedImg} />
-          </Modal>
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar onSubmit={handleFormSubmit} />
+      {error && <p>{error}</p>}
+      <ImageGallery images={images} onSelect={selectImg} />
+      {isLoading && <Loader />}
+      {showButton && <Button onClick={loadMoreBtn}></Button>}
+      {selectedImg !== null && (
+        <Modal selectedImg={selectedImg} closeModal={closeModal}></Modal>
+      )}
+    </>
+  );
+};
