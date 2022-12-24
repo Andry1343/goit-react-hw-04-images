@@ -28,14 +28,14 @@ export const App = () => {
     setPage(1);
     setImages([]);
     setQuery(prevQuery);
-    setIsLoading(true);
   };
 
   useEffect(() => {
     if (query === '') {
       return;
     }
-
+    setIsLoading(true);
+    
     getCards(query, page)
       .then(images => {
         images.data.hits.length === 0 && toast.info('Nothing found');
