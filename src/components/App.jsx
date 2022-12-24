@@ -19,16 +19,20 @@ export const App = () => {
   const [selectedImg, setSelectedImg] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleFormSubmit = query => {
-    setQuery(query);
+  const handleFormSubmit = prevQuery => {
+    if (prevQuery === query) {
+      return toast.warn(
+        'Please, enter something else or click the download button'
+      );
+    }
     setPage(1);
     setImages([]);
+    setQuery(prevQuery);
     setIsLoading(true);
   };
 
   useEffect(() => {
     if (query === '') {
-      setShowButton(false);
       return;
     }
 
