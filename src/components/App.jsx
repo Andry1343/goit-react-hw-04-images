@@ -4,7 +4,6 @@ import { Searchbar } from './searchbar/Searchbar';
 import { getCards } from '../fetchFoto';
 import { ImageGallery } from './imageGallery/ImageGallery';
 import { Loader } from './loader/Loader';
-/* import { Modal } from './modal/Modal'; */
 import { Modal } from './modal/Modal';
 
 import { ToastContainer, toast } from 'react-toastify';
@@ -24,11 +23,12 @@ export const App = () => {
     setQuery(query);
     setPage(1);
     setImages([]);
+    setIsLoading(true);
   };
 
   useEffect(() => {
     if (query === '') {
-      setShowButton(false); //потестить это нужно?
+      setShowButton(false);
       return;
     }
 
@@ -39,8 +39,8 @@ export const App = () => {
         if (images.data.hits.length >= 12) {
           setShowButton(true);
         } else setShowButton(false);
-        setImages(prevImages => [...prevImages, ...images.data.hits]);
         setIsLoading(false);
+        setImages(prevImages => [...prevImages, ...images.data.hits]);
       })
       .catch(error => {
         setError(toast.error('Something wrong, reload the page'));
